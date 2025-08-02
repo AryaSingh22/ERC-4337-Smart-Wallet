@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERC-4337 Smart Wallet</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        .section h2 {
+            color: #555;
+            margin-top: 0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 ERC-4337 Smart Wallet</h1>
+        
+        <div class="section">
+            <h2>Wallet Connection</h2>
+            <div class="form-group">
+                <button id="connectWallet">Connect Wallet</button>
+                <span id="walletStatus">Not connected</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="section">
+                <h2>Wallet Information</h2>
+                <div class="form-group">
+                    <label>Owner Address:</label>
+                    <input type="text" id="ownerAddress" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Wallet Balance:</label>
+                    <input type="text" id="walletBalance" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Guardian Count:</label>
+                    <input type="text" id="guardianCount" readonly>
+                </div>
+                <button id="refreshInfo">Refresh Info</button>
+            </div>
+
+            <div class="section">
+                <h2>Guardian Management</h2>
+                <div class="form-group">
+                    <label>New Guardian Address:</label>
+                    <input type="text" id="newGuardian" placeholder="0x...">
+                </div>
+                <button id="addGuardian">Add Guardian</button>
+                <button id="removeGuardian">Remove Guardian</button>
+                <div id="guardiansList"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="section">
+                <h2>Transaction Execution</h2>
+                <div class="form-group">
+                    <label>Target Address:</label>
+                    <input type="text" id="targetAddress" placeholder="0x...">
+                </div>
+                <div class="form-group">
+                    <label>Value (ETH):</label>
+                    <input type="number" id="txValue" step="0.001" placeholder="0.0">
+                </div>
+                <div class="form-group">
+                    <label>Data (hex):</label>
+                    <textarea id="txData" placeholder="0x..."></textarea>
+                </div>
+                <button id="executeTx">Execute Transaction</button>
+            </div>
+
+            <div class="section">
+                <h2>Batch Transactions</h2>
+                <div class="form-group">
+                    <label>Batch Data (JSON):</label>
+                    <textarea id="batchData" placeholder='[{"target":"0x...","value":"0","data":"0x..."}]'></textarea>
+                </div>
+                <button id="executeBatch">Execute Batch</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Social Recovery</h2>
+            <div class="form-group">
+                <label>New Owner Address:</label>
+                <input type="text" id="newOwner" placeholder="0x...">
+            </div>
+            <button id="initiateRecovery">Initiate Recovery</button>
+            <button id="voteRecovery">Vote Recovery</button>
+            <button id="executeRecovery">Execute Recovery</button>
+            <div id="recoveryStatus"></div>
+        </div>
+
+        <div class="section">
+            <h2>Transaction Log</h2>
+            <div id="txLog" style="max-height: 200px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 5px;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script>
+        let provider, signer, walletContract, paymasterContract;
+        let walletAddress, paymasterAddress;
+
+        // Contract ABIs (simplified for demo)
+        const walletABI = [
+            "function owner() view returns (address)",
+            "function getGuardianCount() view returns (uint256)",
+            "function getGuardians() view returns (address[])",
+            "function isGuardian(address) view returns (bool)",
+            "function execute(address target, uint256 value, bytes calldata data)",
+            "function executeBatch(tuple(address target, uint256 value, bytes data)[] calls)",
+            "function addGuardian(address guardian)",
+            "function removeGuardian(address guardian)",
+            "function initiateRecovery(address newOwner)",
+            "function voteRecovery(uint256 recoveryId)",
+            "function executeRecovery(uint256 recoveryId)",
+            "function getRecoveryRequest(uint256 recoveryId) view returns (address, uint256, uint256, bool)"
+        ];
+
+        const paymasterABI = [
+            "function addVerifiedUser(address user)",
+            "function isVerifiedUser(address user) view returns (bool)",
+            "function deposit() payable"
+        ];
+
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    showStatus('Please install MetaMask!', 'error');
+                    return;
+                }
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                
+                const address = await signer.getAddress();
+                showStatus(`Connected: ${address}`, 'success');
+                
+                // Initialize contracts (you'll need to deploy these first)
+                // walletContract = new ethers.Contract(walletAddress, walletABI, signer);
+                // paymasterContract = new ethers.Contract(paymasterAddress, paymasterABI, signer);
+                
+                document.getElementById('walletStatus').textContent = `Connected: ${address.substring(0, 6)}...${address.substring(38)}`;
+                refreshWalletInfo();
+            } catch (error) {
+                showStatus(`Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshWalletInfo() {
+            if (!walletContract) {
+                showStatus('Wallet contract not initialized', 'info');
+                return;
+            }
+
+            try {
+                const owner = await walletContract.owner();
+                const balance = await provider.getBalance(walletAddress);
+                const guardianCount = await walletContract.getGuardianCount();
+                
+                document.getElementById('ownerAddress').value = owner;
+                document.getElementById('walletBalance').value = ethers.utils.formatEther(balance);
+                document.getElementById('guardianCount').value = guardianCount.toString();
+                
+                // Load guardians
+                const guardians = await walletContract.getGuardians();
+                const guardiansList = document.getElementById('guardiansList');
+                guardiansList.innerHTML = '<h4>Guardians:</h4>';
+                guardians.forEach((guardian, index) => {
+                    guardiansList.innerHTML += `<div>${index + 1}. ${guardian}</div>`;
+                });
+            } catch (error) {
+                showStatus(`Failed to refresh info: ${error.message}`, 'error');
+            }
+        }
+
+        async function executeTransaction() {
+            if (!walletContract) {
+                showStatus('Wallet contract not initialized', 'error');
+                return;
+            }
+
+            try {
+                const target = document.getElementById('targetAddress').value;
+                const value = ethers.utils.parseEther(document.getElementById('txValue').value || '0');
+                const data = document.getElementById('txData').value || '0x';
+
+                if (!ethers.utils.isAddress(target)) {
+                    showStatus('Invalid target address', 'error');
+                    return;
+                }
+
+                const tx = await walletContract.execute(target, value, data);
+                showStatus(`Transaction sent: ${tx.hash}`, 'success');
+                addToLog(`Execute TX: ${tx.hash}`);
+                
+                await tx.wait();
+                showStatus('Transaction confirmed!', 'success');
+                refreshWalletInfo();
+            } catch (error) {
+                showStatus(`Transaction failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function executeBatch() {
+            if (!walletContract) {
+                showStatus('Wallet contract not initialized', 'error');
+                return;
+            }
+
+            try {
+                const batchData = JSON.parse(document.getElementById('batchData').value);
+                const calls = batchData.map(call => ({
+                    target: call.target,
+                    value: ethers.utils.parseEther(call.value || '0'),
+                    data: call.data || '0x'
+                }));
+
+                const tx = await walletContract.executeBatch(calls);
+                showStatus(`Batch transaction sent: ${tx.hash}`, 'success');
+                addToLog(`Batch TX: ${tx.hash}`);
+                
+                await tx.wait();
+                showStatus('Batch transaction confirmed!', 'success');
+                refreshWalletInfo();
+            } catch (error) {
+                showStatus(`Batch transaction failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function addGuardian() {
+            if (!walletContract) {
+                showStatus('Wallet contract not initialized', 'error');
+                return;
+            }
+
+            try {
+                const guardian = document.getElementById('newGuardian').value;
+                if (!ethers.utils.isAddress(guardian)) {
+                    showStatus('Invalid guardian address', 'error');
+                    return;
+                }
+
+                const tx = await walletContract.addGuardian(guardian);
+                showStatus(`Add guardian transaction sent: ${tx.hash}`, 'success');
+                addToLog(`Add Guardian: ${tx.hash}`);
+                
+                await tx.wait();
+                showStatus('Guardian added!', 'success');
+                refreshWalletInfo();
+            } catch (error) {
+                showStatus(`Add guardian failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function initiateRecovery() {
+            if (!walletContract) {
+                showStatus('Wallet contract not initialized', 'error');
+                return;
+            }
+
+            try {
+                const newOwner = document.getElementById('newOwner').value;
+                if (!ethers.utils.isAddress(newOwner)) {
+                    showStatus('Invalid new owner address', 'error');
+                    return;
+                }
+
+                const tx = await walletContract.initiateRecovery(newOwner);
+                showStatus(`Recovery initiated: ${tx.hash}`, 'success');
+                addToLog(`Initiate Recovery: ${tx.hash}`);
+                
+                await tx.wait();
+                showStatus('Recovery initiated!', 'success');
+            } catch (error) {
+                showStatus(`Recovery initiation failed: ${error.message}`, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            document.querySelector('.container').insertBefore(statusDiv, document.querySelector('.section'));
+            
+            setTimeout(() => {
+                statusDiv.remove();
+            }, 5000);
+        }
+
+        function addToLog(message) {
+            const log = document.getElementById('txLog');
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Event listeners
+        document.getElementById('connectWallet').addEventListener('click', connectWallet);
+        document.getElementById('refreshInfo').addEventListener('click', refreshWalletInfo);
+        document.getElementById('executeTx').addEventListener('click', executeTransaction);
+        document.getElementById('executeBatch').addEventListener('click', executeBatch);
+        document.getElementById('addGuardian').addEventListener('click', addGuardian);
+        document.getElementById('initiateRecovery').addEventListener('click', initiateRecovery);
+
+        // Auto-connect if already connected
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', function (accounts) {
+                if (accounts.length > 0) {
+                    connectWallet();
+                }
+            });
+        }
+    </script>
+</body>
+</html> 
