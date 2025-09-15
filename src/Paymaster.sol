@@ -8,7 +8,7 @@ import "./interfaces/IEntryPoint.sol";
  * @dev Dummy paymaster that sponsors gas for verified users
  * This is a simplified implementation for demonstration purposes
  */
-contract Paymaster {
+contract Paymaster {     
     // Events
     event GasSponsored(address indexed user, uint256 gasUsed, uint256 gasCost);
     event PaymasterDeposited(address indexed depositor, uint256 amount);
