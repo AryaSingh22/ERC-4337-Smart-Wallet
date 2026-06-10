@@ -236,7 +236,7 @@ contract SmartWallet is
             return false;
         }
         bytes4 selector = bytes4(callData[:4]);
-        uint256 totalValue;
+        uint256 totalValue = 0;
 
         if (selector == this.execute.selector) {
             (address target, uint256 value,) = abi.decode(callData[4:], (address, uint256, bytes));
@@ -312,6 +312,7 @@ contract SmartWallet is
      * @dev Internal call helper that bubbles up revert reasons
      */
     function _call(address target, uint256 value, bytes memory data) internal {
+        // slither-disable-next-line arbitrary-send-eth
         (bool success, bytes memory result) = target.call{value: value}(data);
         if (!success) {
             // Bubble up the original revert reason
