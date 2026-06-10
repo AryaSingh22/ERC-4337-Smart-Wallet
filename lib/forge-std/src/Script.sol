@@ -1,27 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.2 <0.9.0;
 
-contract Script {
-    function vm() internal pure returns (Vm) {
-        return Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-    }
-}
+// 💬 ABOUT
+// Forge Std's default Script.
 
-interface Vm {
-    function envUint(string calldata) external view returns (uint256);
-    function addr(uint256) external pure returns (address);
-    function startBroadcast(uint256) external;
-    function stopBroadcast() external;
-    function console_log(string calldata) external;
-    function console_log(address) external;
-}
+// 🧩 MODULES
+import {console} from "./console.sol";
+import {console2} from "./console2.sol";
+import {safeconsole} from "./safeconsole.sol";
+import {StdChains} from "./StdChains.sol";
+import {StdCheatsSafe} from "./StdCheats.sol";
+import {StdConstants} from "./StdConstants.sol";
+import {stdJson} from "./StdJson.sol";
+import {stdMath} from "./StdMath.sol";
+import {StdStorage, stdStorageSafe} from "./StdStorage.sol";
+import {StdStyle} from "./StdStyle.sol";
+import {StdUtils} from "./StdUtils.sol";
+import {VmSafe} from "./Vm.sol";
 
-contract console {
-    function log(string memory p0) internal pure {
-        // Console logging in Foundry
-    }
-    
-    function log(address p0) internal pure {
-        // Console logging in Foundry
-    }
-} 
+// 📦 BOILERPLATE
+import {ScriptBase} from "./Base.sol";
+
+// ⭐️ SCRIPT
+abstract contract Script is ScriptBase, StdChains, StdCheatsSafe, StdUtils {
+    // Note: IS_SCRIPT() must return true.
+    bool public IS_SCRIPT = true;
+}

@@ -1,415 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERC-4337 Smart Wallet</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        .container {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-        }
-        .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            background: #f9f9f9;
-        }
-        .section h2 {
-            color: #555;
-            margin-top: 0;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 5px;
-            transition: transform 0.2s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .status {
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERC-4337 Smart Wallet</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --red: #f85149; --amber: #d29922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; padding: 24px; max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: var(--muted); margin-bottom: 24px; font-size: 13px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; margin-bottom: 12px; color: var(--accent); }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
+  input, select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 8px 10px; font-size: 13px; font-family: ui-monospace, monospace; }
+  button { background: #21262d; border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 8px 14px; font-size: 13px; cursor: pointer; margin: 10px 6px 0 0; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: #1f6feb; border-color: #1f6feb; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 4px 12px; font-size: 13px; font-family: ui-monospace, monospace; }
+  .kv dt { color: var(--muted); }
+  .kv dd { word-break: break-all; }
+  #log { font: 12px ui-monospace, monospace; white-space: pre-wrap; word-break: break-all; max-height: 240px; overflow-y: auto; color: var(--muted); }
+  #log .ok { color: var(--green); } #log .err { color: var(--red); } #log .info { color: var(--accent); }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; border: 1px solid var(--border); color: var(--muted); margin-left: 8px; }
+  .badge.live { color: var(--green); border-color: var(--green); }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔐 ERC-4337 Smart Wallet</h1>
-        
-        <div class="section">
-            <h2>Wallet Connection</h2>
-            <div class="form-group">
-                <button id="connectWallet">Connect Wallet</button>
-                <span id="walletStatus">Not connected</span>
-            </div>
-        </div>
+  <h1>ERC-4337 Smart Wallet <span id="netBadge" class="badge">disconnected</span></h1>
+  <p class="sub">EntryPoint v0.7 account with social recovery, session keys &amp; gasless transactions.
+     Direct owner interactions via MetaMask; for bundler-relayed UserOperations see the README (permissionless.js).</p>
 
-        <div class="grid">
-            <div class="section">
-                <h2>Wallet Information</h2>
-                <div class="form-group">
-                    <label>Owner Address:</label>
-                    <input type="text" id="ownerAddress" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Wallet Balance:</label>
-                    <input type="text" id="walletBalance" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Guardian Count:</label>
-                    <input type="text" id="guardianCount" readonly>
-                </div>
-                <button id="refreshInfo">Refresh Info</button>
-            </div>
-
-            <div class="section">
-                <h2>Guardian Management</h2>
-                <div class="form-group">
-                    <label>New Guardian Address:</label>
-                    <input type="text" id="newGuardian" placeholder="0x...">
-                </div>
-                <button id="addGuardian">Add Guardian</button>
-                <button id="removeGuardian">Remove Guardian</button>
-                <div id="guardiansList"></div>
-            </div>
-        </div>
-
-        <div class="grid">
-            <div class="section">
-                <h2>Transaction Execution</h2>
-                <div class="form-group">
-                    <label>Target Address:</label>
-                    <input type="text" id="targetAddress" placeholder="0x...">
-                </div>
-                <div class="form-group">
-                    <label>Value (ETH):</label>
-                    <input type="number" id="txValue" step="0.001" placeholder="0.0">
-                </div>
-                <div class="form-group">
-                    <label>Data (hex):</label>
-                    <textarea id="txData" placeholder="0x..."></textarea>
-                </div>
-                <button id="executeTx">Execute Transaction</button>
-            </div>
-
-            <div class="section">
-                <h2>Batch Transactions</h2>
-                <div class="form-group">
-                    <label>Batch Data (JSON):</label>
-                    <textarea id="batchData" placeholder='[{"target":"0x...","value":"0","data":"0x..."}]'></textarea>
-                </div>
-                <button id="executeBatch">Execute Batch</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Social Recovery</h2>
-            <div class="form-group">
-                <label>New Owner Address:</label>
-                <input type="text" id="newOwner" placeholder="0x...">
-            </div>
-            <button id="initiateRecovery">Initiate Recovery</button>
-            <button id="voteRecovery">Vote Recovery</button>
-            <button id="executeRecovery">Execute Recovery</button>
-            <div id="recoveryStatus"></div>
-        </div>
-
-        <div class="section">
-            <h2>Transaction Log</h2>
-            <div id="txLog" style="max-height: 200px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 5px;"></div>
-        </div>
+  <div class="card">
+    <h2>Connection</h2>
+    <div class="row">
+      <div><label>Factory address</label><input id="factoryAddr" placeholder="0x… (from Deploy.s.sol output)"></div>
+      <div><label>Wallet address</label><input id="walletAddr" placeholder="0x… (or use Predict below)"></div>
     </div>
+    <button class="primary" id="btnConnect">Connect MetaMask</button>
+    <button id="btnLoad">Load wallet</button>
+  </div>
 
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
-    <script>
-        let provider, signer, walletContract, paymasterContract;
-        let walletAddress, paymasterAddress;
+  <div class="card">
+    <h2>Create wallet (CREATE2, counterfactual)</h2>
+    <div class="row">
+      <div><label>Owner</label><input id="newOwner" placeholder="0x… (defaults to connected account)"></div>
+      <div><label>Guardians (comma-separated)</label><input id="newGuardians" placeholder="0x…, 0x…"></div>
+    </div>
+    <div class="row3">
+      <div><label>Threshold</label><input id="newThreshold" value="2"></div>
+      <div><label>Recovery timeout (days)</label><input id="newTimeout" value="3"></div>
+      <div><label>Execution delay (days)</label><input id="newDelay" value="1"></div>
+    </div>
+    <label>Salt</label><input id="newSalt" value="0">
+    <button id="btnPredict">Predict address</button>
+    <button class="primary" id="btnCreate">Deploy wallet</button>
+  </div>
 
-        // Contract ABIs (simplified for demo)
-        const walletABI = [
-            "function owner() view returns (address)",
-            "function getGuardianCount() view returns (uint256)",
-            "function getGuardians() view returns (address[])",
-            "function isGuardian(address) view returns (bool)",
-            "function execute(address target, uint256 value, bytes calldata data)",
-            "function executeBatch(tuple(address target, uint256 value, bytes data)[] calls)",
-            "function addGuardian(address guardian)",
-            "function removeGuardian(address guardian)",
-            "function initiateRecovery(address newOwner)",
-            "function voteRecovery(uint256 recoveryId)",
-            "function executeRecovery(uint256 recoveryId)",
-            "function getRecoveryRequest(uint256 recoveryId) view returns (address, uint256, uint256, bool)"
-        ];
+  <div class="card">
+    <h2>Wallet state</h2>
+    <dl class="kv" id="walletInfo"><dt>—</dt><dd>load a wallet first</dd></dl>
+  </div>
 
-        const paymasterABI = [
-            "function addVerifiedUser(address user)",
-            "function isVerifiedUser(address user) view returns (bool)",
-            "function deposit() payable"
-        ];
+  <div class="card">
+    <h2>Execute (owner-direct)</h2>
+    <div class="row3">
+      <div><label>Target</label><input id="execTarget" placeholder="0x…"></div>
+      <div><label>Value (ETH)</label><input id="execValue" value="0"></div>
+      <div><label>Calldata</label><input id="execData" value="0x"></div>
+    </div>
+    <button class="primary" id="btnExecute">Execute</button>
+  </div>
 
-        async function connectWallet() {
-            try {
-                if (typeof window.ethereum === 'undefined') {
-                    showStatus('Please install MetaMask!', 'error');
-                    return;
-                }
+  <div class="card">
+    <h2>Guardians &amp; recovery</h2>
+    <div class="row">
+      <div><label>Guardian address</label><input id="guardianAddr" placeholder="0x…"></div>
+      <div><label>Recovery: proposed new owner / id</label><input id="recoveryParam" placeholder="0x… or id"></div>
+    </div>
+    <button id="btnAddGuardian">Add guardian</button>
+    <button id="btnRemoveGuardian">Remove guardian</button>
+    <button id="btnInitRecovery">Initiate recovery</button>
+    <button id="btnVoteRecovery">Vote (by id)</button>
+    <button id="btnExecRecovery">Execute (by id)</button>
+    <button id="btnCancelRecovery">Cancel (by id)</button>
+  </div>
 
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                await provider.send("eth_requestAccounts", []);
-                signer = provider.getSigner();
-                
-                const address = await signer.getAddress();
-                showStatus(`Connected: ${address}`, 'success');
-                
-                // Initialize contracts (you'll need to deploy these first)
-                // walletContract = new ethers.Contract(walletAddress, walletABI, signer);
-                // paymasterContract = new ethers.Contract(paymasterAddress, paymasterABI, signer);
-                
-                document.getElementById('walletStatus').textContent = `Connected: ${address.substring(0, 6)}...${address.substring(38)}`;
-                refreshWalletInfo();
-            } catch (error) {
-                showStatus(`Connection failed: ${error.message}`, 'error');
-            }
-        }
+  <div class="card">
+    <h2>Session keys</h2>
+    <div class="row3">
+      <div><label>Key address</label><input id="skAddr" placeholder="0x…"></div>
+      <div><label>Spending limit (ETH)</label><input id="skLimit" value="0.1"></div>
+      <div><label>Valid for (hours, 0 = forever)</label><input id="skHours" value="24"></div>
+    </div>
+    <label>Allowed target (blank = any)</label><input id="skTarget" placeholder="0x…">
+    <button class="primary" id="btnAddSk">Add session key</button>
+    <button id="btnRevokeSk">Revoke key</button>
+    <button id="btnRevokeAllSk">Revoke all</button>
+  </div>
 
-        async function refreshWalletInfo() {
-            if (!walletContract) {
-                showStatus('Wallet contract not initialized', 'info');
-                return;
-            }
+  <div class="card"><h2>Log</h2><div id="log"></div></div>
 
-            try {
-                const owner = await walletContract.owner();
-                const balance = await provider.getBalance(walletAddress);
-                const guardianCount = await walletContract.getGuardianCount();
-                
-                document.getElementById('ownerAddress').value = owner;
-                document.getElementById('walletBalance').value = ethers.utils.formatEther(balance);
-                document.getElementById('guardianCount').value = guardianCount.toString();
-                
-                // Load guardians
-                const guardians = await walletContract.getGuardians();
-                const guardiansList = document.getElementById('guardiansList');
-                guardiansList.innerHTML = '<h4>Guardians:</h4>';
-                guardians.forEach((guardian, index) => {
-                    guardiansList.innerHTML += `<div>${index + 1}. ${guardian}</div>`;
-                });
-            } catch (error) {
-                showStatus(`Failed to refresh info: ${error.message}`, 'error');
-            }
-        }
+<script type="module">
+import { createWalletClient, createPublicClient, custom, parseEther, parseAbi, getAddress } from "https://esm.sh/viem@2";
 
-        async function executeTransaction() {
-            if (!walletContract) {
-                showStatus('Wallet contract not initialized', 'error');
-                return;
-            }
+const factoryAbi = parseAbi([
+  "function createAccount(address owner, address[] guardians, uint256 guardianThreshold, uint256 recoveryTimeout, uint256 recoveryExecutionDelay, uint256 salt) returns (address)",
+  "function getAddress(address owner, address[] guardians, uint256 guardianThreshold, uint256 recoveryTimeout, uint256 recoveryExecutionDelay, uint256 salt) view returns (address)",
+  "function accountImplementation() view returns (address)",
+]);
 
-            try {
-                const target = document.getElementById('targetAddress').value;
-                const value = ethers.utils.parseEther(document.getElementById('txValue').value || '0');
-                const data = document.getElementById('txData').value || '0x';
+const walletAbi = parseAbi([
+  "function owner() view returns (address)",
+  "function getGuardians() view returns (address[])",
+  "function guardianThreshold() view returns (uint256)",
+  "function recoveryRequestCount() view returns (uint256)",
+  "function getDeposit() view returns (uint256)",
+  "function getRecoveryRequest(uint256) view returns (address newOwner, uint256 timestamp, uint256 voteCount, bool executed, bool cancelled, uint256 executeAfter)",
+  "function execute(address target, uint256 value, bytes data)",
+  "function addGuardian(address guardian)",
+  "function removeGuardian(address guardian)",
+  "function initiateRecovery(address newOwner)",
+  "function voteRecovery(uint256 recoveryId)",
+  "function executeRecovery(uint256 recoveryId)",
+  "function cancelRecovery(uint256 recoveryId)",
+  "function addSessionKey(address key, uint48 validAfter, uint48 validUntil, uint256 spendingLimit, address allowedTarget)",
+  "function revokeSessionKey(address key)",
+  "function revokeAllSessionKeys()",
+]);
 
-                if (!ethers.utils.isAddress(target)) {
-                    showStatus('Invalid target address', 'error');
-                    return;
-                }
+let pub, wc, account, walletAddress;
+const $ = (id) => document.getElementById(id);
+const log = (msg, cls = "") => {
+  const el = document.createElement("div");
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  if (cls) el.className = cls;
+  $("log").prepend(el);
+};
+const errLog = (e) => log(e.shortMessage ?? e.message ?? String(e), "err");
 
-                const tx = await walletContract.execute(target, value, data);
-                showStatus(`Transaction sent: ${tx.hash}`, 'success');
-                addToLog(`Execute TX: ${tx.hash}`);
-                
-                await tx.wait();
-                showStatus('Transaction confirmed!', 'success');
-                refreshWalletInfo();
-            } catch (error) {
-                showStatus(`Transaction failed: ${error.message}`, 'error');
-            }
-        }
+const guardParams = () => ({
+  owner: getAddress(($("newOwner").value.trim() || account)),
+  guardians: $("newGuardians").value.split(",").map(s => getAddress(s.trim())),
+  threshold: BigInt($("newThreshold").value),
+  timeout: BigInt(Math.round(parseFloat($("newTimeout").value) * 86400)),
+  delay: BigInt(Math.round(parseFloat($("newDelay").value) * 86400)),
+  salt: BigInt($("newSalt").value),
+});
 
-        async function executeBatch() {
-            if (!walletContract) {
-                showStatus('Wallet contract not initialized', 'error');
-                return;
-            }
+async function write(fn, args, value = 0n) {
+  if (!wc) throw new Error("connect MetaMask first");
+  if (!walletAddress) throw new Error("load a wallet first");
+  const hash = await wc.writeContract({
+    address: walletAddress, abi: walletAbi, functionName: fn, args, value, account, chain: null,
+  });
+  log(`${fn} tx: ${hash}`, "info");
+  await pub.waitForTransactionReceipt({ hash });
+  log(`${fn} confirmed`, "ok");
+  await refresh();
+}
 
-            try {
-                const batchData = JSON.parse(document.getElementById('batchData').value);
-                const calls = batchData.map(call => ({
-                    target: call.target,
-                    value: ethers.utils.parseEther(call.value || '0'),
-                    data: call.data || '0x'
-                }));
+async function refresh() {
+  if (!walletAddress) return;
+  try {
+    const [owner, guardians, threshold, recoveries, balance, deposit] = await Promise.all([
+      pub.readContract({ address: walletAddress, abi: walletAbi, functionName: "owner" }),
+      pub.readContract({ address: walletAddress, abi: walletAbi, functionName: "getGuardians" }),
+      pub.readContract({ address: walletAddress, abi: walletAbi, functionName: "guardianThreshold" }),
+      pub.readContract({ address: walletAddress, abi: walletAbi, functionName: "recoveryRequestCount" }),
+      pub.getBalance({ address: walletAddress }),
+      pub.readContract({ address: walletAddress, abi: walletAbi, functionName: "getDeposit" }).catch(() => 0n),
+    ]);
+    $("walletInfo").innerHTML = `
+      <dt>Address</dt><dd>${walletAddress}</dd>
+      <dt>Owner</dt><dd>${owner}${owner.toLowerCase() === account?.toLowerCase() ? " (you)" : ""}</dd>
+      <dt>Guardians (${guardians.length}, need ${threshold})</dt><dd>${guardians.join("<br>")}</dd>
+      <dt>Balance</dt><dd>${(Number(balance) / 1e18).toFixed(6)} ETH</dd>
+      <dt>EntryPoint deposit</dt><dd>${(Number(deposit) / 1e18).toFixed(6)} ETH</dd>
+      <dt>Recovery requests</dt><dd>${recoveries}</dd>`;
+  } catch (e) { errLog(e); }
+}
 
-                const tx = await walletContract.executeBatch(calls);
-                showStatus(`Batch transaction sent: ${tx.hash}`, 'success');
-                addToLog(`Batch TX: ${tx.hash}`);
-                
-                await tx.wait();
-                showStatus('Batch transaction confirmed!', 'success');
-                refreshWalletInfo();
-            } catch (error) {
-                showStatus(`Batch transaction failed: ${error.message}`, 'error');
-            }
-        }
+$("btnConnect").onclick = async () => {
+  try {
+    if (!window.ethereum) throw new Error("MetaMask not found");
+    wc = createWalletClient({ transport: custom(window.ethereum) });
+    pub = createPublicClient({ transport: custom(window.ethereum) });
+    [account] = await wc.requestAddresses();
+    const chainId = await pub.getChainId();
+    $("netBadge").textContent = `chain ${chainId} · ${account.slice(0, 8)}…`;
+    $("netBadge").className = "badge live";
+    log(`connected ${account} on chain ${chainId}`, "ok");
+  } catch (e) { errLog(e); }
+};
 
-        async function addGuardian() {
-            if (!walletContract) {
-                showStatus('Wallet contract not initialized', 'error');
-                return;
-            }
+$("btnLoad").onclick = async () => {
+  try {
+    walletAddress = getAddress($("walletAddr").value.trim());
+    await refresh();
+    log(`loaded wallet ${walletAddress}`, "ok");
+  } catch (e) { errLog(e); }
+};
 
-            try {
-                const guardian = document.getElementById('newGuardian').value;
-                if (!ethers.utils.isAddress(guardian)) {
-                    showStatus('Invalid guardian address', 'error');
-                    return;
-                }
+async function predict() {
+  const p = guardParams();
+  const addr = await pub.readContract({
+    address: getAddress($("factoryAddr").value.trim()), abi: factoryAbi, functionName: "getAddress",
+    args: [p.owner, p.guardians, p.threshold, p.timeout, p.delay, p.salt],
+  });
+  $("walletAddr").value = addr;
+  return addr;
+}
 
-                const tx = await walletContract.addGuardian(guardian);
-                showStatus(`Add guardian transaction sent: ${tx.hash}`, 'success');
-                addToLog(`Add Guardian: ${tx.hash}`);
-                
-                await tx.wait();
-                showStatus('Guardian added!', 'success');
-                refreshWalletInfo();
-            } catch (error) {
-                showStatus(`Add guardian failed: ${error.message}`, 'error');
-            }
-        }
+$("btnPredict").onclick = async () => {
+  try {
+    const addr = await predict();
+    log(`counterfactual address: ${addr} (you can fund it before deploying)`, "info");
+  } catch (e) { errLog(e); }
+};
 
-        async function initiateRecovery() {
-            if (!walletContract) {
-                showStatus('Wallet contract not initialized', 'error');
-                return;
-            }
+$("btnCreate").onclick = async () => {
+  try {
+    const p = guardParams();
+    const hash = await wc.writeContract({
+      address: getAddress($("factoryAddr").value.trim()), abi: factoryAbi, functionName: "createAccount",
+      args: [p.owner, p.guardians, p.threshold, p.timeout, p.delay, p.salt], account, chain: null,
+    });
+    log(`createAccount tx: ${hash}`, "info");
+    await pub.waitForTransactionReceipt({ hash });
+    walletAddress = getAddress(await predict());
+    log(`wallet deployed at ${walletAddress}`, "ok");
+    await refresh();
+  } catch (e) { errLog(e); }
+};
 
-            try {
-                const newOwner = document.getElementById('newOwner').value;
-                if (!ethers.utils.isAddress(newOwner)) {
-                    showStatus('Invalid new owner address', 'error');
-                    return;
-                }
+$("btnExecute").onclick = () => write("execute",
+  [getAddress($("execTarget").value.trim()), parseEther($("execValue").value || "0"), ($("execData").value.trim() || "0x")]
+).catch(errLog);
 
-                const tx = await walletContract.initiateRecovery(newOwner);
-                showStatus(`Recovery initiated: ${tx.hash}`, 'success');
-                addToLog(`Initiate Recovery: ${tx.hash}`);
-                
-                await tx.wait();
-                showStatus('Recovery initiated!', 'success');
-            } catch (error) {
-                showStatus(`Recovery initiation failed: ${error.message}`, 'error');
-            }
-        }
+$("btnAddGuardian").onclick = () => write("addGuardian", [getAddress($("guardianAddr").value.trim())]).catch(errLog);
+$("btnRemoveGuardian").onclick = () => write("removeGuardian", [getAddress($("guardianAddr").value.trim())]).catch(errLog);
+$("btnInitRecovery").onclick = () => write("initiateRecovery", [getAddress($("recoveryParam").value.trim())]).catch(errLog);
+$("btnVoteRecovery").onclick = () => write("voteRecovery", [BigInt($("recoveryParam").value)]).catch(errLog);
+$("btnExecRecovery").onclick = () => write("executeRecovery", [BigInt($("recoveryParam").value)]).catch(errLog);
+$("btnCancelRecovery").onclick = () => write("cancelRecovery", [BigInt($("recoveryParam").value)]).catch(errLog);
 
-        function showStatus(message, type) {
-            const statusDiv = document.createElement('div');
-            statusDiv.className = `status ${type}`;
-            statusDiv.textContent = message;
-            document.querySelector('.container').insertBefore(statusDiv, document.querySelector('.section'));
-            
-            setTimeout(() => {
-                statusDiv.remove();
-            }, 5000);
-        }
-
-        function addToLog(message) {
-            const log = document.getElementById('txLog');
-            const timestamp = new Date().toLocaleTimeString();
-            log.innerHTML += `<div>[${timestamp}] ${message}</div>`;
-            log.scrollTop = log.scrollHeight;
-        }
-
-        // Event listeners
-        document.getElementById('connectWallet').addEventListener('click', connectWallet);
-        document.getElementById('refreshInfo').addEventListener('click', refreshWalletInfo);
-        document.getElementById('executeTx').addEventListener('click', executeTransaction);
-        document.getElementById('executeBatch').addEventListener('click', executeBatch);
-        document.getElementById('addGuardian').addEventListener('click', addGuardian);
-        document.getElementById('initiateRecovery').addEventListener('click', initiateRecovery);
-
-        // Auto-connect if already connected
-        if (typeof window.ethereum !== 'undefined') {
-            window.ethereum.on('accountsChanged', function (accounts) {
-                if (accounts.length > 0) {
-                    connectWallet();
-                }
-            });
-        }
-    </script>
+$("btnAddSk").onclick = () => {
+  const hours = parseFloat($("skHours").value || "0");
+  const until = hours > 0 ? Math.floor(Date.now() / 1000) + Math.round(hours * 3600) : 0;
+  const target = $("skTarget").value.trim();
+  return write("addSessionKey", [
+    getAddress($("skAddr").value.trim()), 0, until,
+    parseEther($("skLimit").value || "0"),
+    target ? getAddress(target) : "0x0000000000000000000000000000000000000000",
+  ]).catch(errLog);
+};
+$("btnRevokeSk").onclick = () => write("revokeSessionKey", [getAddress($("skAddr").value.trim())]).catch(errLog);
+$("btnRevokeAllSk").onclick = () => write("revokeAllSessionKeys", []).catch(errLog);
+</script>
 </body>
-</html> 
+</html>
