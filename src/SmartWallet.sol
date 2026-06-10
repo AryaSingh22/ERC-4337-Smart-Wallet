@@ -4,7 +4,9 @@ pragma solidity ^0.8.23;
 import {BaseAccount} from "account-abstraction/core/BaseAccount.sol";
 import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
 import {PackedUserOperation} from "account-abstraction/interfaces/PackedUserOperation.sol";
-import {SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED, _packValidationData} from "account-abstraction/core/Helpers.sol";
+import {
+    SIG_VALIDATION_SUCCESS, SIG_VALIDATION_FAILED, _packValidationData
+} from "account-abstraction/core/Helpers.sol";
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -226,7 +228,10 @@ contract SmartWallet is
      * single allowed target, and a cumulative spending limit (accounted at
      * validation time).
      */
-    function _checkAndUpdateSessionPolicy(SessionKeyData storage key, bytes calldata callData) internal returns (bool) {
+    function _checkAndUpdateSessionPolicy(SessionKeyData storage key, bytes calldata callData)
+        internal
+        returns (bool)
+    {
         if (callData.length < 4) {
             return false;
         }

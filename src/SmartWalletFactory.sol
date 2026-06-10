@@ -45,13 +45,15 @@ contract SmartWalletFactory {
             return SmartWallet(payable(addr));
         }
         ret = SmartWallet(
-            payable(new ERC1967Proxy{salt: bytes32(salt)}(
+            payable(
+                new ERC1967Proxy{salt: bytes32(salt)}(
                     address(accountImplementation),
                     abi.encodeCall(
                         SmartWallet.initialize,
                         (owner, guardians, guardianThreshold, recoveryTimeout, recoveryExecutionDelay)
                     )
-                ))
+                )
+            )
         );
         emit WalletCreated(address(ret), owner, salt);
     }
